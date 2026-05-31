@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGENT FAYE | Classified Portofolio</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        agent: {
+                            dark: '#050505',
+                            light: '#e0e0e0',
+                            primary: '#00ff41', // Matrix green
+                            secondary: '#ff003c', // Alert red
+                            panel: '#111111',
+                            border: '#333333'
+                        }
+                    },
+                    fontFamily: {
+                        mono: ['"Share Tech Mono"', 'monospace'],
+                        sans: ['"Space Grotesk"', 'sans-serif'],
+                    },
+                    backgroundImage: {
+                        'scanlines': 'linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2))',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #050505;
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+
+        /* CRT Scanline Effect */
+        .scanlines::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 50;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* Glitch Effect */
+        .glitch {
+            position: relative;
+            color: #00ff41;
+        }
+        .glitch::before, .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #050505;
+        }
+        .glitch::before {
+            left: 2px;
+            text-shadow: -1px 0 #ff003c;
+            clip: rect(24px, 550px, 90px, 0);
+            animation: glitch-anim 2s infinite linear alternate-reverse;
+        }
+        .glitch::after {
+            left: -2px;
+            text-shadow: -1px 0 #00ffff;
+            clip: rect(85px, 550px, 140px, 0);
+            animation: glitch-anim 2.5s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim {
+            0% { clip: rect(13px, 9999px, 83px, 0); }
+            5% { clip: rect(61px, 9999px, 20px, 0); }
+            10% { clip: rect(98px, 9999px, 93px, 0); }
+            15% { clip: rect(27px, 9999px, 15px, 0); }
+            20% { clip: rect(7px, 9999px, 4px, 0); }
+            25% { clip: rect(88px, 9999px, 89px, 0); }
+            30% { clip: rect(43px, 9999px, 5px, 0); }
+            35% { clip: rect(2px, 9999px, 79px, 0); }
+            40% { clip: rect(55px, 9999px, 58px, 0); }
+            45% { clip: rect(23px, 9999px, 49px, 0); }
+            50% { clip: rect(82px, 9999px, 90px, 0); }
+            55% { clip: rect(4px, 9999px, 25px, 0); }
+            60% { clip: rect(66px, 9999px, 11px, 0); }
+            65% { clip: rect(96px, 9999px, 97px, 0); }
+            70% { clip: rect(29px, 9999px, 35px, 0); }
+            75% { clip: rect(15px, 9999px, 10px, 0); }
+            80% { clip: rect(74px, 9999px, 60px, 0); }
+            85% { clip: rect(31px, 9999px, 22px, 0); }
+            90% { clip: rect(50px, 9999px, 72px, 0); }
+            95% { clip: rect(9px, 9999px, 45px, 0); }
+            100% { clip: rect(85px, 9999px, 16px, 0); }
+        }
+
+        .typewriter {
+            overflow: hidden;
+            border-right: .15em solid #00ff41;
+            white-space: nowrap;
+            margin: 0 auto;
+            animation: typing 3.5s steps(40, end), blink-caret .75s step-end infinite;
+        }
+
+        @keyframes typing { from { width: 0 } to { width: 100% } }
+        @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: #00ff41; } }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #050505; border-left: 1px solid #333; }
+        ::-webkit-scrollbar-thumb { background: #00ff41; }
+        
+        .card-hover:hover {
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+            border-color: #00ff41;
+            transform: translateY(-5px);
+            transition: all 0.3s ease;
+        }
+
+        .progress-bar {
+            transition: width 1.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="font-mono scanlines relative antialiased selection:bg-agent-primary selection:text-black">
+
+    <!-- Terminal Boot Screen Overlay -->
+    <div id="boot-screen" class="fixed inset-0 z-[100] bg-agent-dark flex flex-col justify-center items-center text-agent-primary p-4">
+        <div class="max-w-2xl w-full">
+            <p id="boot-text" class="mb-2"></p>
+            <div class="w-full h-1 bg-agent-border mt-4">
+                <div id="boot-progress" class="h-full bg-agent-primary w-0"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-40 bg-agent-dark/90 backdrop-blur-sm border-b border-agent-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-2">
+                    <img src="https://i.ibb.co.com/Hppr8n7k/Icon.png" alt="Background" class="w-full h-full object-cover opacity-100">
+                    <span class="font-bold text-xl tracking-widest text-white">SYS.<span class="text-agent-primary">FAYE</span></span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a href="#home" class="hover:text-agent-primary hover:bg-agent-panel px-3 py-2 rounded-md text-sm font-medium transition-colors">[ HOME ]</a>
+                        <a href="#dossier" class="hover:text-agent-primary hover:bg-agent-panel px-3 py-2 rounded-md text-sm font-medium transition-colors">[ DOSSIER ]</a>
+                        <a href="#experience" class="hover:text-agent-primary hover:bg-agent-panel px-3 py-2 rounded-md text-sm font-medium transition-colors">[ EXPERIENCE ]</a>
+                        <a href="#archive" class="hover:text-agent-primary hover:bg-agent-panel px-3 py-2 rounded-md text-sm font-medium transition-colors">[ WORKS ARCHIVE ]</a>
+                        <a href="#kontak" class="text-agent-dark bg-agent-primary hover:bg-white px-4 py-2 rounded-sm text-sm font-bold transition-colors">HUBUNGI AGEN</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-btn" class="text-gray-300 hover:text-white focus:outline-none">
+                        <i class="fa-solid fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-agent-panel border-b border-agent-border">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 flex flex-col">
+                <a href="#home" class="text-white hover:text-agent-primary px-3 py-2 text-base font-medium">Home</a>
+                <a href="#dossier" class="text-white hover:text-agent-primary px-3 py-2 text-base font-medium">Dossier</a>
+                <a href="#experience" class="text-white hover:text-agent-primary px-3 py-2 text-base font-medium">Pengalaman</a>
+                <a href="#karya" class="text-white hover:text-agent-primary px-3 py-2 text-base font-medium">Portofolio</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-16">
+        
+        <!-- Hero Section -->
+        <section id="home" class="min-h-screen flex items-center justify-center relative overflow-hidden px-4">
+            <div class="absolute inset-0 opacity-10 flex items-center justify-center">
+                <img src="https://i.ibb.co.com/RG2hbtPD/Backgrond.png" alt="Background" class="w-full h-full object-cover opacity-43">
+            </div>
+            <div class="relative z-10 max-w-4xl w-full text-center md:text-left grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div>
+                    <div class="inline-block border border-agent-secondary text-agent-secondary px-3 py-1 text-xs mb-6 uppercase tracking-widest bg-agent-secondary/10">
+                        <i class="fa-solid fa-lock mr-2"></i>Top Secret Information
+                    </div>
+                    <h1 class="text-5xl md:text-7xl font-sans font-bold mb-2 text-white glitch" data-text="AGENT FAYE">AGENT FAYE</h1>
+                    <h2 class="text-xl md:text-2xl text-agent-primary mb-6 typewriter inline-block">PROOF OF WORK [2026]</h2>
+                    <p class="text-gray-400 mb-8 max-w-lg font-sans leading-relaxed">
+                        Operating at the intersection of creativity and precision. Transforming vision into execution with high-level expertise.
+                    </p>
+                    <div class="flex gap-4 justify-center md:justify-start">
+                        <a href="#dossier" class="border border-agent-primary text-agent-primary px-6 py-3 hover:bg-agent-primary hover:text-black transition-all uppercase tracking-wider font-bold">
+                            Buka Berkas
+                        </a>
+                        <a href="#archive" class="border border-agent-border text-gray-300 px-6 py-3 hover:border-white hover:text-white transition-all uppercase tracking-wider">
+                            Lihat Misi
+                        </a>
+                    </div>
+                </div>
+                <div class="hidden md:flex justify-end relative">
+                    <!-- Stylized Profile Image Placeholder -->
+                    <div class="relative w-72 h-96 border-2 border-agent-border bg-agent-panel p-2 z-10">
+                        <div class="w-full h-full border border-dashed border-gray-600 flex items-center justify-center relative overflow-hidden bg-zinc-900 group">
+                            
+                            <!-- Ganti link https://... di bawah ini dengan nama file foto Anda. Contoh: src="foto-fivaldy.jpg" -->
+                            <img src="https://i.ibb.co.com/60qQVj3D/Profile.jpg" alt="Agent Faye" class="absolute inset-0 w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500 z-0">
+                            
+                            <div class="absolute inset-0 bg-agent-primary/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none"></div>
+                            <!-- Scanning line -->
+                            <div class="absolute w-full h-1 bg-agent-primary/50 top-0 left-0 animate-[scan_3s_ease-in-out_infinite] z-20 pointer-events-none"></div>
+                        </div>
+                        <div class="absolute -bottom-4 -left-4 bg-agent-primary text-black font-bold px-3 py-1 text-sm z-30">
+                            ID: 060301
+                        </div>
+                    </div>
+                    <!-- Decorative elements -->
+                    <div class="absolute top-10 -right-4 w-24 h-24 border-t-2 border-r-2 border-agent-primary opacity-50"></div>
+                    <div class="absolute -bottom-6 right-10 text-agent-primary opacity-30 text-xs">
+                        SYS_STATUS: ONLINE<br>
+                        CLEARANCE: SENIOR
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Profile Dossier Section -->
+        <section id="dossier" class="py-20 border-t border-agent-border bg-agent-panel/30 relative">
+            <div class="max-w-6xl mx-auto px-4">
+                <div class="flex items-center gap-4 mb-12 border-b border-agent-border pb-4">
+                    <h2 class="text-3xl font-bold text-white"><span class="text-agent-secondary">01.</span> AGENT PROFILE</h2>
+                    <div class="h-px bg-agent-border flex-grow"></div>
+                    <span class="text-xs text-agent-secondary border border-agent-secondary px-2 py-1">CLASSIFIED</span>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Bio Data -->
+                    <div class="col-span-1 lg:col-span-2 bg-agent-dark border border-agent-border p-6 card-hover relative">
+                        <div class="absolute top-0 right-0 p-2 opacity-50 text-agent-primary">
+                            <i class="fa-solid fa-qrcode text-4xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-6 text-agent-primary border-b border-agent-border pb-2 inline-block">BIOMETRIC DATA</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-sans">
+                            <div class="mb-2"><span class="text-gray-500 font-mono text-xs block mb-1">NAME</span> <span class="text-white font-bold text-lg">FIVALDY ARDIYA SUGANDI</span></div>
+                            <div class="mb-2"><span class="text-gray-500 font-mono text-xs block mb-1">CODE NAME</span> <span class="text-agent-primary font-mono text-lg">&gt; FAYE_</span></div>
+                            <div class="mb-2"><span class="text-gray-500 font-mono text-xs block mb-1">D.O.B</span> <span class="text-white">06 MARCH 2001</span></div>
+                            <div class="mb-2"><span class="text-gray-500 font-mono text-xs block mb-1">DOMICILED</span> <span class="text-white">BANDUNG, INDONESIA</span></div>
+                            <div class="mb-2"><span class="text-gray-500 font-mono text-xs block mb-1">GENDER</span> <span class="text-white">MALE</span></div>
+                            <div class="mb-2"><span class="text-gray-500 font-mono text-xs block mb-1">STATUS</span> <span class="text-green-400"><i class="fa-solid fa-circle text-[8px] mr-1"></i>ACTIVE AGENT</span></div>
+                            <div class="mb-2"><span class="text-gray-500 font-mono text-xs block mb-1">CLEARANCE LEVEL</span> <span class="text-agent-secondary font-bold">SENIOR AGENT</span></div>
+                            <div class="mb-2"><span class="text-gray-500 font-mono text-xs block mb-1">DIVISION</span> <span class="text-white">MULTIMEDIA CREATIVE</span></div>
+                        </div>
+
+                        <div class="mt-8 pt-6 border-t border-agent-border">
+                            <h3 class="text-lg font-bold mb-3 text-agent-primary">BACKGROUND</h3>
+                            <p class="text-gray-400 font-sans text-sm leading-relaxed mb-4">
+                                DRIVEN BY PASSION RATHER THAN PROFESSION, THIS AGENT OPERATES AT THE INTERSECTION OF CREATIVITY AND PRECISION. SINCE FIRST CONTACT WITH THE CREATIVE WORLD, THEY HAVE CONTINUOUSLY EVOLVED—MASTERING DIVERSE MULTIMEDIA DISCIPLINES WITH RELENTLESS DEDICATION.
+                            </p>
+                            <p class="text-gray-400 font-sans text-sm leading-relaxed">
+                                EVERY CHALLENGE IS TREATED AS AN OPPORTUNITY, EVERY SKILL ACQUIRED AS A MISSION ACCOMPLISHED. ADAPTABLE, MULTI-TALENTED, AND CONSTANTLY ADVANCING, THIS AGENT THRIVES ON GROWTH—TURNING VISION INTO EXECUTION WITH CALCULATED ARTISTRY.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Skills & Education -->
+                    <div class="col-span-1 flex flex-col gap-8">
+                        <div class="bg-agent-dark border border-agent-border p-6 card-hover">
+                            <h3 class="text-lg font-bold mb-4 text-agent-primary border-b border-agent-border pb-2"><i class="fa-solid fa-graduation-cap mr-2"></i>TRAINING / EDUCATION</h3>
+                            <div class="font-sans">
+                                <p class="text-white font-bold">SMKN 14 BANDUNG</p>
+                                <p class="text-agent-primary text-sm mb-2">MULTIMEDIA</p>
+                                <p class="text-xs text-gray-500 font-mono mb-3">[ 2017 - 2019 ]</p>
+                                <p class="text-gray-400 text-xs leading-relaxed">
+                                    Create visual content to communicate ideas and messages. This includes designing graphics, making social media content, editing photos and videos, developing branding and producing creative visuals for digital and print media.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="bg-agent-dark border border-agent-border p-6 card-hover flex-grow">
+                            <h3 class="text-lg font-bold mb-4 text-agent-primary border-b border-agent-border pb-2"><i class="fa-solid fa-wrench mr-2"></i>ARSENAL / TOOLS</h3>
+                            <div class="space-y-4 font-sans text-sm">
+                                <div>
+                                    <div class="flex justify-between mb-1"><span class="text-white">Adobe Photoshop</span> <span class="text-agent-secondary text-xs">EXPERT</span></div>
+                                    <div class="w-full bg-agent-panel h-1.5"><div class="bg-agent-secondary h-1.5 progress-bar" style="width: 0%" data-target="95%"></div></div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between mb-1"><span class="text-white">Adobe Premiere Pro</span> <span class="text-agent-primary text-xs">SPECIALIST</span></div>
+                                    <div class="w-full bg-agent-panel h-1.5"><div class="bg-agent-primary h-1.5 progress-bar" style="width: 0%" data-target="85%"></div></div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between mb-1"><span class="text-white">Adobe After Effect</span> <span class="text-agent-primary text-xs">SPECIALIST</span></div>
+                                    <div class="w-full bg-agent-panel h-1.5"><div class="bg-agent-primary h-1.5 progress-bar" style="width: 0%" data-target="85%"></div></div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between mb-1"><span class="text-white">Figma</span> <span class="text-agent-primary text-xs">SPECIALIST</span></div>
+                                    <div class="w-full bg-agent-panel h-1.5"><div class="bg-agent-primary h-1.5 progress-bar" style="width: 0%" data-target="85%"></div></div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between mb-1"><span class="text-white">Artificial Intelligence</span> <span class="text-agent-primary text-xs">SPECIALIST</span></div>
+                                    <div class="w-full bg-agent-panel h-1.5"><div class="bg-agent-primary h-1.5 progress-bar" style="width: 0%" data-target="85%"></div></div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between mb-1"><span class="text-white">Adobe Illustrator</span> <span class="text-gray-400 text-xs">SKILLED</span></div>
+                                    <div class="w-full bg-agent-panel h-1.5"><div class="bg-gray-400 h-1.5 progress-bar" style="width: 0%" data-target="75%"></div></div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between mb-1"><span class="text-white">Adobe Lightroom</span> <span class="text-gray-400 text-xs">SKILLED</span></div>
+                                    <div class="w-full bg-agent-panel h-1.5"><div class="bg-gray-400 h-1.5 progress-bar" style="width: 0%" data-target="75%"></div></div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between mb-1"><span class="text-white">Capcut</span> <span class="text-gray-400 text-xs">SKILLED</span></div>
+                                    <div class="w-full bg-agent-panel h-1.5"><div class="bg-gray-400 h-1.5 progress-bar" style="width: 0%" data-target="75%"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Experience Timeline -->
+        <section id="experience" class="py-20 border-t border-agent-border relative">
+            <div class="max-w-4xl mx-auto px-4">
+                <div class="flex items-center gap-4 mb-16 border-b border-agent-border pb-4">
+                    <h2 class="text-3xl font-bold text-white"><span class="text-agent-primary">02.</span> FIELD OPERATIONS</h2>
+                    <div class="h-px bg-agent-border flex-grow"></div>
+                    <span class="text-xs text-agent-primary border border-agent-primary px-2 py-1">EXPERIENCE LOG</span>
+                </div>
+
+                <div class="relative border-l border-agent-primary/50 ml-4 md:ml-0 md:space-y-12 space-y-8">
+                    
+                    <!-- Exp Item 1 -->
+                    <div class="relative pl-8 md:pl-10 group">
+                        <div class="absolute w-4 h-4 bg-agent-dark border-2 border-agent-primary rounded-full -left-[9px] top-1 group-hover:bg-agent-primary transition-colors shadow-[0_0_10px_#00ff41]"></div>
+                        <div class="mb-1">
+                            <span class="text-agent-primary font-bold bg-agent-primary/10 px-2 py-1 text-xs mb-2 inline-block">NOV 2025 - PRESENT</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-1 font-sans">ELITE GOLDFISH CHAMPIONSHIP</h3>
+                        <p class="text-gray-400 text-sm mb-3">AS FREELANCE GRAPHIC DESIGNER</p>
+                        <p class="text-gray-500 text-sm font-sans leading-relaxed">
+                            Specialized in crafting visual assets for social media operations including event campaigns, announcements, and motion graphics. Oversees and designs the full creative direction of live events—ensuring every element is strategically executed and visually aligned.
+                        </p>
+                    </div>
+
+                    <!-- Exp Item 2 -->
+                    <div class="relative pl-8 md:pl-10 group">
+                        <div class="absolute w-4 h-4 bg-agent-dark border-2 border-agent-primary rounded-full -left-[9px] top-1 group-hover:bg-agent-primary transition-colors shadow-[0_0_10px_#00ff41]"></div>
+                        <div class="mb-1">
+                            <span class="text-agent-primary font-bold bg-agent-primary/10 px-2 py-1 text-xs mb-2 inline-block">AUG 2025 - PRESENT</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-1 font-sans">VINEDRIP MASTERPIECE</h3>
+                        <p class="text-gray-400 text-sm mb-3">AS FREELANCE DIGITAL CREATIVE</p>
+                        <p class="text-gray-500 text-sm font-sans leading-relaxed">
+                            Handles social media operations, product design, and visual content production, executes video and photo capture, along with precise editing ensuring all outputs meet mission standards and visual consistency.
+                        </p>
+                    </div>
+
+                    <!-- Exp Item 3 -->
+                    <div class="relative pl-8 md:pl-10 group">
+                        <div class="absolute w-4 h-4 bg-agent-dark border-2 border-gray-500 rounded-full -left-[9px] top-1 group-hover:bg-gray-500 transition-colors"></div>
+                        <div class="mb-1">
+                            <span class="text-gray-400 font-bold bg-gray-800 px-2 py-1 text-xs mb-2 inline-block">OCT 2022 - DEC 2024</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-300 mb-1 font-sans">MOTUS INDONESIA</h3>
+                        <p class="text-gray-400 text-sm mb-3">AS FREELANCE GRAPHIC DESIGNER</p>
+                        <p class="text-gray-500 text-sm font-sans leading-relaxed">
+                            Responsible for social media postings and monthly performance reports. Develops product designs and provides on-ground support during operations—acting as backup for photo and video capture, as well as post-production editing when required.
+                        </p>
+                    </div>
+
+                    <!-- Exp Item 4 -->
+                    <div class="relative pl-8 md:pl-10 group">
+                        <div class="absolute w-4 h-4 bg-agent-dark border-2 border-gray-500 rounded-full -left-[9px] top-1 group-hover:bg-gray-500 transition-colors"></div>
+                        <div class="mb-1">
+                            <span class="text-gray-400 font-bold bg-gray-800 px-2 py-1 text-xs mb-2 inline-block">DEC 2022 - NOV 2023</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-300 mb-1 font-sans">PANDARIN SHISHA</h3>
+                        <p class="text-gray-400 text-sm mb-3">AS FREELANCE DIGITAL CREATIVE</p>
+                        <p class="text-gray-500 text-sm font-sans leading-relaxed">
+                            Oversees social media management and visual design strategy, executes photo and video capture during operations or upon request from partnered clubs ensuring all content meets mission standards.
+                        </p>
+                    </div>
+                    
+                    <!-- Exp Item 5 -->
+                    <div class="relative pl-8 md:pl-10 group">
+                        <div class="absolute w-4 h-4 bg-agent-dark border-2 border-gray-500 rounded-full -left-[9px] top-1 group-hover:bg-gray-500 transition-colors"></div>
+                        <div class="mb-1">
+                            <span class="text-gray-400 font-bold bg-gray-800 px-2 py-1 text-xs mb-2 inline-block">JAN 2022 - DEC 2022</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-300 mb-1 font-sans">NORA CREATIVE AGENCY</h3>
+                        <p class="text-gray-400 text-sm mb-3">AS FREELANCE GRAPHIC DESIGN</p>
+                        <p class="text-gray-500 text-sm font-sans leading-relaxed">
+                            Designs and executes social media visuals across multiple assigned brands—maintaining consistency, identity, and strategic impact across all channels.
+                        </p>
+                    </div>
+                    
+                    <!-- Exp Item 6 -->
+                    <div class="relative pl-8 md:pl-10 group">
+                        <div class="absolute w-4 h-4 bg-agent-dark border-2 border-gray-500 rounded-full -left-[9px] top-1 group-hover:bg-gray-500 transition-colors"></div>
+                        <div class="mb-1">
+                            <span class="text-gray-400 font-bold bg-gray-800 px-2 py-1 text-xs mb-2 inline-block">OCT 2021 - OCT 2022</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-300 mb-1 font-sans">MXCGOODS</h3>
+                        <p class="text-gray-400 text-sm mb-3">AS FREELANCE CONTENT CREATOR</p>
+                        <p class="text-gray-500 text-sm font-sans leading-relaxed">
+                            Produces visual content for social media, with a primary focus on video and photography, ensures content continuity by supporting and supplying posting materials from captured assets maintaining consistent output across operations.
+                        </p>
+                    </div>
+                    
+                    <!-- Exp Item 7 -->
+                    <div class="relative pl-8 md:pl-10 group">
+                        <div class="absolute w-4 h-4 bg-agent-dark border-2 border-gray-500 rounded-full -left-[9px] top-1 group-hover:bg-gray-500 transition-colors"></div>
+                        <div class="mb-1">
+                            <span class="text-gray-400 font-bold bg-gray-800 px-2 py-1 text-xs mb-2 inline-block">AUG 2019 - JAN 2022</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-300 mb-1 font-sans">DOBUJACK INVASION</h3>
+                        <p class="text-gray-400 text-sm mb-3">AS FREELANCE CONTENT & PRODUCT DESIGN</p>
+                        <p class="text-gray-500 text-sm font-sans leading-relaxed">
+                            Creates content for social media operations, handling product photography and videography along with full post-production editing. Deploys to selected offline events and develops product designs for commercial use—ensuring all outputs align with mission standards.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Works/Portfolio Section -->
+        <section id="archive" class="py-20 border-t border-agent-border bg-agent-panel/20">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="flex items-center gap-4 mb-12 border-b border-agent-border pb-4">
+                    <h2 class="text-3xl font-bold text-white"><span class="text-agent-secondary">03.</span> HIGHLIGHTED WORKS</h2>
+                    <div class="h-px bg-agent-border flex-grow"></div>
+                    <span class="text-xs text-agent-secondary border border-agent-secondary px-2 py-1">DECRYPTED FILES</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    
+                    <!-- Work 1 -->
+                    <div class="bg-agent-dark border border-agent-border overflow-hidden group cursor-pointer relative card-hover">
+                        <div class="h-48 bg-zinc-900 border-b border-agent-border relative flex items-center justify-center overflow-hidden">
+                            <div class="absolute inset-0 bg-agent-dark/60 group-hover:bg-transparent transition-colors z-10 pointer-events-none"></div>
+                            <!-- Ganti src="..." dengan nama file gambar Anda -->
+                            <img src="https://i.ibb.co.com/Y7JF3NTG/Groomers.png" alt="Elite Goldfish" class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-500 z-0">
+                        </div>
+                        <div class="p-5">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-bold text-white font-sans">ELITE GOLDFISH CHAMPIONSHIP</h3>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-agent-primary text-sm opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            </div>
+                            <p class="text-xs text-agent-primary mb-3">CLIENT: @ELITEGOLDFISHCHAMPIONSHIP</p>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span class="px-2 py-1 bg-agent-panel border border-agent-border text-[10px] text-gray-400">SOCMED DESIGN</span>
+                                <span class="px-2 py-1 bg-agent-panel border border-agent-border text-[10px] text-gray-400">MOTION GRAPHIC</span>
+                                <span class="px-2 py-1 bg-agent-panel border border-agent-border text-[10px] text-gray-400">EVENT DESIGN</span>
+                            </div>
+                            <p class="text-gray-500 text-xs font-sans line-clamp-3">
+                                Elite Goldfish Championship is a national goldfish event integrated with KMKI. Developing visual content for social media, designing event visuals and on-site materials, and creating merchandise designs.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Work 2 -->
+                    <div class="bg-agent-dark border border-agent-border overflow-hidden group cursor-pointer relative card-hover">
+                        <div class="h-48 bg-zinc-900 border-b border-agent-border relative flex items-center justify-center overflow-hidden">
+                            <div class="absolute inset-0 bg-agent-dark/60 group-hover:bg-transparent transition-colors z-10 pointer-events-none"></div>
+                            <!-- Ganti src="..." dengan nama file gambar Anda -->
+                            <img src="https://i.ibb.co.com/S4bZB4HT/2-VDM.png" alt="Vinedrip Masterpiece" class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-500 z-0">
+                        </div>
+                        <div class="p-5">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-bold text-white font-sans">VINEDRIP MASTERPIECE</h3>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-agent-primary text-sm opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            </div>
+                            <p class="text-xs text-agent-primary mb-3">CLIENT: @VDM.CO</p>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span class="px-2 py-1 bg-agent-panel border border-agent-border text-[10px] text-gray-400">VIDEOGRAPHY</span>
+                                <span class="px-2 py-1 bg-agent-panel border border-agent-border text-[10px] text-gray-400">PHOTOGRAPHY</span>
+                                <span class="px-2 py-1 bg-agent-panel border border-agent-border text-[10px] text-gray-400">PRODUCT DESIGN</span>
+                            </div>
+                            <p class="text-gray-500 text-xs font-sans line-clamp-3">
+                                Vinedrip Masterpiece is a footwear brand from Cibaduyut focused on online sales. Role includes working as a videographer and photographer, designing products, and creating visual layouts for social media.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Work 3: Motus Indonesia -->
+                    <div class="bg-agent-dark border border-agent-border overflow-hidden group cursor-pointer relative card-hover">
+                        <div class="h-48 bg-zinc-900 border-b border-agent-border relative flex items-center justify-center overflow-hidden">
+                            <div class="absolute inset-0 bg-agent-dark/60 group-hover:bg-transparent transition-colors z-10 pointer-events-none"></div>
+                            <!-- Ganti src="..." dengan nama file gambar Anda -->
+                            <img src="https://i.ibb.co.com/qFW2XTFX/3-mts.png" alt="Motus Indonesia" class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-500 z-0">
+                        </div>
+                        <div class="p-5">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-bold text-white font-sans">MOTUS INDONESIA</h3>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-agent-primary text-sm opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            </div>
+                            <p class="text-xs text-agent-primary mb-3">CLIENT: @MOTUSINDONESIA</p>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span class="px-2 py-1 bg-agent-panel border border-agent-border text-[10px] text-gray-400">SOCMED DESIGN</span>
+                                <span class="px-2 py-1 bg-agent-panel border border-agent-border text-[10px] text-gray-400">PHOTOGRAPHY</span>
+                            </div>
+                            <p class="text-gray-500 text-xs font-sans line-clamp-3">
+                                Mid-to-upper market streetwear fashion brand focused on basketball and sports communities. Creating visual designs, producing product photography, and supporting offline events documentation.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Work 4: PT Mekari Olahraga Indonesia -->
+                    <div class="bg-agent-dark border border-agent-border overflow-hidden group cursor-pointer relative card-hover">
+                        <div class="h-48 bg-zinc-900 border-b border-agent-border relative flex items-center justify-center overflow-hidden">
+                            <div class="absolute inset-0 bg-agent-dark/60 group-hover:bg-transparent transition-colors z-10 pointer-events-none"></div>
+                            <!-- Ganti src="..." dengan nama file gambar Anda -->
+                            <img src="https://i.ibb.co.com/sdvJQb76/4-mkr.png" alt="PT Mekari Olahraga Indonesia" class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-500 z-0">
+                        </div>
+                        <div class="p-5">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-bold text-white font-sans">PT MEKARI OLAHRAGA</h3>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-agent-primary text-sm opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            </div>
+                            <p class="text-xs text-agent-primary mb-3">CLIENT: @TOKOMEKARI</p>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span class="px-2 py-1 bg-agent-panel border border-agent-border text-[10px] text-gray-400">SOCMED DESIGN</span>
+                                <span class="px-2 py-1 bg-agent-panel border border-agent-border text-[10px] text-gray-400">VIDEOGRAPHY</span>
+                                <span class="px-2 py-1 bg-agent-panel border border-agent-border text-[10px] text-gray-400">DIGITAL MARKETING</span>
+                            </div>
+                            <p class="text-gray-500 text-xs font-sans line-clamp-3">
+                                Official dealer for sports equipment (Molten & Wilson). Creating visual designs for social media, producing product photography & videography, and supporting offline sports events documentation.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Work 5 -->
+                    <div class="bg-agent-dark border border-agent-border overflow-hidden group cursor-pointer relative card-hover">
+                        <div class="h-48 bg-zinc-900 border-b border-agent-border relative flex items-center justify-center overflow-hidden">
+                            <div class="absolute inset-0 bg-agent-dark/60 group-hover:bg-transparent transition-colors z-10 pointer-events-none"></div>
+                            <!-- Ganti src="..." dengan nama file gambar Anda -->
+                            <img src="https://i.ibb.co.com/qLKP1NKV/5-pandarin.png" alt="123 Shisha" class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-500 z-0">
+                        </div>
+                        <div class="p-5">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-bold text-white font-sans">123SHISHA (PANDARIN)</h3>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-agent-primary text-sm opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            </div>
+                            <p class="text-xs text-agent-primary mb-3">CLIENT: @PANDARINSHISHA</p>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span class="px-2 py-1 bg-agent-panel border border-agent-border text-[10px] text-gray-400">SOCMED DESIGN</span>
+                                <span class="px-2 py-1 bg-agent-panel border border-agent-border text-[10px] text-gray-400">VIDEOGRAPHY</span>
+                            </div>
+                            <p class="text-gray-500 text-xs font-sans line-clamp-3">
+                                Focused on shisha distribution, partnering with F&B venues such as clubs and restaurants. Managing social media visuals and producing photo and video content during events.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Work 6 -->
+                    <div class="bg-agent-dark border border-agent-border overflow-hidden group cursor-pointer relative card-hover">
+                        <div class="h-48 bg-zinc-900 border-b border-agent-border relative flex items-center justify-center overflow-hidden">
+                            <div class="absolute inset-0 bg-agent-dark/60 group-hover:bg-transparent transition-colors z-10 pointer-events-none"></div>
+                            <!-- Ganti src="..." dengan nama file gambar Anda -->
+                            <img src="https://i.ibb.co.com/LXC8nTYz/6-Nora.png" alt="WHSTL & BORDERS" class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-500 z-0">
+                        </div>
+                        <div class="p-5">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-bold text-white font-sans">NORA CREATIVE AGENCY</h3>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-agent-primary text-sm opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            </div>
+                            <p class="text-xs text-agent-primary mb-3">CLIENT: @WHSTLOFFICIAL / @BORDERS.CO</p>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span class="px-2 py-1 bg-agent-panel border border-agent-border text-[10px] text-gray-400">SOCMED DESIGN</span>
+                                <span class="px-2 py-1 bg-agent-panel border border-agent-border text-[10px] text-gray-400">MOTION GRAPHIC</span>
+                            </div>
+                            <p class="text-gray-500 text-xs font-sans line-clamp-3">
+                                Bandung-based clothing brands operating in both online and offline markets. Creating visual content for social media and developing design assets for marketplace needs. (Via Nora Creative Agency)
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Work 7: Dobujack Invasion -->
+                    <div class="bg-agent-dark border border-agent-border overflow-hidden group cursor-pointer relative card-hover">
+                        <div class="h-48 bg-zinc-900 border-b border-agent-border relative flex items-center justify-center overflow-hidden">
+                            <div class="absolute inset-0 bg-agent-dark/60 group-hover:bg-transparent transition-colors z-10 pointer-events-none"></div>
+                            <!-- Ganti src="..." dengan nama file gambar Anda -->
+                            <img src="https://i.ibb.co.com/svKM01mW/7-dobujack.png" alt="Dobujack Invasion" class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-500 z-0">
+                        </div>
+                        <div class="p-5">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-bold text-white font-sans">DOBUJACK INVASION</h3>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-agent-primary text-sm opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            </div>
+                            <p class="text-xs text-agent-primary mb-3">CLIENT: @DOBUJACKINVASION</p>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span class="px-2 py-1 bg-agent-panel border border-agent-border text-[10px] text-gray-400">PRODUCT DESIGN</span>
+                                <span class="px-2 py-1 bg-agent-panel border border-agent-border text-[10px] text-gray-400">VIDEOGRAPHY</span>
+                            </div>
+                            <p class="text-gray-500 text-xs font-sans line-clamp-3">
+                                Streetwear fashion brand operating across both online and offline channels. Creating visual content, producing product photography, and contributing to product design.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Work 8: MXCGOODS -->
+                    <div class="bg-agent-dark border border-agent-border overflow-hidden group cursor-pointer relative card-hover">
+                        <div class="h-48 bg-zinc-900 border-b border-agent-border relative flex items-center justify-center overflow-hidden">
+                            <div class="absolute inset-0 bg-agent-dark/60 group-hover:bg-transparent transition-colors z-10 pointer-events-none"></div>
+                            <!-- Ganti src="..." dengan nama file gambar Anda -->
+                            <img src="https://i.ibb.co.com/v4yL4F61/8-mxc.png" alt="MXCGOODS" class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-500 z-0">
+                        </div>
+                        <div class="p-5">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-bold text-white font-sans">MXCGOODS</h3>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-agent-primary text-sm opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            </div>
+                            <p class="text-xs text-agent-primary mb-3">CLIENT: @MXCGOODS.ID</p>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span class="px-2 py-1 bg-agent-panel border border-agent-border text-[10px] text-gray-400">SOCMED DESIGN</span>
+                                <span class="px-2 py-1 bg-agent-panel border border-agent-border text-[10px] text-gray-400">PHOTOGRAPHY</span>
+                            </div>
+                            <p class="text-gray-500 text-xs font-sans line-clamp-3">
+                                Bandung-based fashion brand offering a full range of apparel. Creating visual content for social media, conducting product photography, and developing promotional content for campaigns.
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="kontak" class="py-20 border-t border-agent-border bg-black relative">
+            <div class="max-w-4xl mx-auto px-4 text-center">
+                <div class="inline-block border border-agent-primary text-agent-primary px-4 py-2 text-sm mb-6 uppercase tracking-widest bg-agent-primary/10">
+                    <i class="fa-solid fa-satellite-dish mr-2 animate-pulse"></i> SECURE COMMS CHANNEL OPEN
+                </div>
+                
+                <h2 class="text-4xl md:text-5xl font-bold text-white mb-6 font-sans">LET'S WORK TOGETHER</h2>
+                <p class="text-gray-400 mb-10 font-sans max-w-lg mx-auto">
+                    FEEL FREE TO CONTACT ME ANYTIME. READY TO INITIATE NEW PROTOCOLS AND MISSIONS.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                    <a href="https://wa.me/6285156846259" target="_blank" class="bg-agent-dark border border-agent-border p-6 hover:border-agent-primary hover:bg-agent-primary/5 transition-all group">
+                        <i class="fa-brands fa-whatsapp text-3xl text-gray-500 group-hover:text-agent-primary mb-4 transition-colors"></i>
+                        <h3 class="text-white font-bold mb-1">DIRECT LINE</h3>
+                        <p class="text-agent-primary text-lg font-mono">0851-5684-6259</p>
+                    </a>
+                    
+                    <a href="mailto:fivaldy.ardiya159@gmail.com" class="bg-agent-dark border border-agent-border p-6 hover:border-agent-secondary hover:bg-agent-secondary/5 transition-all group">
+                        <i class="fa-regular fa-envelope text-3xl text-gray-500 group-hover:text-agent-secondary mb-4 transition-colors"></i>
+                        <h3 class="text-white font-bold mb-1">ENCRYPTED MAIL</h3>
+                        <p class="text-agent-secondary text-sm font-mono break-all">fivaldy.ardiya159@gmail.com</p>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-agent-dark border-t border-agent-border py-6 text-center text-xs text-gray-600 font-mono">
+        <p>© 2026 FIVALDY ARDIYA. ALL INTELLECTUAL PROPERTY SECURED.</p>
+        <p class="mt-1 text-[10px]">SYSTEM VER. 1.0.0 // AGENT CODE 060301</p>
+    </footer>
+
+    <!-- Interactive Scripts -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- Boot Screen Sequence ---
+            const bootScreen = document.getElementById('boot-screen');
+            const bootText = document.getElementById('boot-text');
+            const bootProgress = document.getElementById('boot-progress');
+            const body = document.body;
+            
+            // Disable scroll during boot
+            body.style.overflow = 'hidden';
+
+            const bootMessages = [
+                "INITIALIZING SECURE CONNECTION...",
+                "BYPASSING FIREWALLS...",
+                "ACCESSING AGENT DATABASE...",
+                "DECRYPTING PROFILE: FAYE_",
+                "ACCESS GRANTED."
+            ];
+
+            let msgIndex = 0;
+            
+            function updateBootText() {
+                if (msgIndex < bootMessages.length) {
+                    bootText.innerText = bootMessages[msgIndex];
+                    bootProgress.style.width = `${((msgIndex + 1) / bootMessages.length) * 100}%`;
+                    msgIndex++;
+                    setTimeout(updateBootText, 600); // Speed of boot text
+                } else {
+                    setTimeout(() => {
+                        bootScreen.style.opacity = '0';
+                        bootScreen.style.transition = 'opacity 0.8s ease';
+                        setTimeout(() => {
+                            bootScreen.style.display = 'none';
+                            body.style.overflow = ''; // Re-enable scroll
+                            animateProgressBars(); // Trigger animations once booted
+                        }, 800);
+                    }, 500);
+                }
+            }
+
+            // Start boot sequence
+            setTimeout(updateBootText, 500);
+
+            // --- Mobile Menu Toggle ---
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            
+            btn.addEventListener('click', () => {
+                menu.classList.toggle('hidden');
+            });
+
+            // Close mobile menu on link click
+            document.querySelectorAll('#mobile-menu a').forEach(link => {
+                link.addEventListener('click', () => {
+                    menu.classList.add('hidden');
+                });
+            });
+
+            // --- Progress Bar Animation on Scroll ---
+            const progressBars = document.querySelectorAll('.progress-bar');
+            let animated = false;
+
+            function animateProgressBars() {
+                if (animated) return;
+                progressBars.forEach(bar => {
+                    const target = bar.getAttribute('data-target');
+                    bar.style.width = target;
+                });
+                animated = true;
+            }
+
+            // Optional: Re-trigger animation if scrolled into view later
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const bar = entry.target;
+                        bar.style.width = bar.getAttribute('data-target');
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            progressBars.forEach(bar => {
+                observer.observe(bar);
+            });
+            
+            // Glitch text randomizer effect on hover for Agent Name
+            const glitchText = document.querySelector('.glitch');
+            const originalText = glitchText.getAttribute('data-text');
+            const chars = '!<>-_\\/[]{}—=+*^?#________';
+            
+            glitchText.addEventListener('mouseover', () => {
+                let iterations = 0;
+                const interval = setInterval(() => {
+                    glitchText.innerText = originalText.split('').map((letter, index) => {
+                        if(index < iterations) return originalText[index];
+                        return chars[Math.floor(Math.random() * chars.length)];
+                    }).join('');
+                    
+                    if(iterations >= originalText.length) clearInterval(interval);
+                    iterations += 1 / 3;
+                }, 30);
+            });
+        });
+    </script>
+</body>
+</html>
